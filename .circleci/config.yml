@@ -29,7 +29,7 @@ jobs:
           name: Wait for db
           command: dockerize -wait tcp://localhost:3306 -timeout 1m
       # run setup!
-      - run: bin/install-wp-tests.sh circle_test root '' localhost 4.9
+      - run: bin/install-wp-tests.sh circle_test root '' localhost 4.9 true
       # run tests!
       - run: WP_MULTISITE=0 phpunit --exclude-group=ms-required
       - run: WP_MULTISITE=1 phpunit --exclude-group=ms-excluded

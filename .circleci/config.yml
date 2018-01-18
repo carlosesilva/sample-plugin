@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: carlosesilva/wp-phpunit-xdebug
+      - image: mysql:5.7
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    working_directory: ~/repo
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "composer.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: composer install -n --prefer-dist
+      - save_cache:
+          paths:
+            - ./vendor
+          key: v1-dependencies-{{ checksum "composer.json" }}
+      # run setup!
+      - run:
+        command: |
+          # Wait for mysql container to spin up properly
+          printf '\nWaiting for mysql to properly boot up. This may take a little while...\n'
+          while ! mysqladmin ping -proot -h mysql --silent
+          do
+            sleep 1
+          done
+          # Run the install-wp-tests.sh script
+          printf "\nRunning bin/install-wp-tests.sh in container\n\n"
+          bin/install-wp-tests.sh wordpress_test root '' mysql 4.9
+          printf "\nSetup complete!\n"
+      # run tests!
+      - run: WP_MULTISITE=0 phpunit --exclude-group=ms-required
+      - run: WP_MULTISITE=1 phpunit --exclude-group=ms-excluded

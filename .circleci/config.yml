@@ -21,10 +21,7 @@ jobs:
             - ./vendor
           key: v1-dependencies-{{ checksum "composer.json" }}
       # run setup!
-      - run:
-        command: |
-          # Wait for mysql container to spin up properly
-          printf '\nWaiting for mysql to properly boot up. This may take a little while...\n'
+      - run: |
           while ! mysqladmin ping -proot -h mysql --silent
           do
             sleep 1
